@@ -1,31 +1,24 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Libro;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 
 class LibroController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): JsonResponse
+    public function index()
     {
-        $libros = Libro::paginate(10);
-        
-        return response()->json([
-            'success' => true,
-            'data' => $libros
-        ], 200);
+        $libros = Libro::latest()->paginate(10);
+        return view('libros.index', compact('libros'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): JsonResponse
+    public function create()
+    {
+        return view('libros.create');
+    }
+
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'titulo' => 'required|min:3|max:255',
@@ -37,48 +30,24 @@ class LibroController extends Controller
             'fecha_publicacion' => 'required|date'
         ]);
 
-        $libro = Libro::create($validated);
+        Libro::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Libro creado exitosamente',
-            'data' => $libro
-        ], 201);
+        return redirect()->route('libros.index')
+            ->with('success', 'Libro creado exitosamente');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Libro $libro): JsonResponse
+    public function show(Libro $libro)
     {
-
-        if (!$libro) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Libro no encontrado'
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $libro
-        ], 200);
+        return view('libros.show', compact('libro'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): JsonResponse
+    public function edit(Libro $libro)
     {
-        $libro = Libro::find($id);
+        return view('libros.edit', compact('libro'));
+    }
 
-        if (!$libro) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Libro no encontrado'
-            ], 404);
-        }
-
+    public function update(Request $request, Libro $libro)
+    {
         $validated = $request->validate([
             'titulo' => 'required|min:3|max:255',
             'autor' => 'required|min:3|max:255',
@@ -91,32 +60,15 @@ class LibroController extends Controller
 
         $libro->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Libro actualizado exitosamente',
-            'data' => $libro
-        ], 200);
+        return redirect()->route('libros.index')
+            ->with('success', 'Libro actualizado exitosamente');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): JsonResponse
+    public function destroy(Libro $libro)
     {
-        $libro = Libro::find($id);
-
-        if (!$libro) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Libro no encontrado'
-            ], 404);
-        }
-
         $libro->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Libro eliminado exitosamente'
-        ], 200);
+        return redirect()->route('libros.index')
+            ->with('success', 'Libro eliminado exitosamente');
     }
 }
